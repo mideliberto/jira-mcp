@@ -176,3 +176,47 @@ def add_comment_tool(
     """
     client = _get_client()
     return client.add_comment(issue_key=issue_key, body=body, visibility=visibility)
+
+
+def get_transitions_tool(issue_key: str) -> list[dict[str, Any]]:
+    """
+    Get available transitions for an issue.
+
+    Args:
+        issue_key: Issue key (e.g., "ITPROJ-45")
+
+    Returns:
+        [
+            {'id': '2', 'name': 'To Do'},
+            {'id': '3', 'name': 'In Progress'},
+            ...
+        ]
+    """
+    client = _get_client()
+    return client.get_transitions(issue_key=issue_key)
+
+
+def transition_issue_tool(
+    issue_key: str,
+    transition_name: str,
+) -> dict[str, Any]:
+    """
+    Transition a Jira issue through its workflow.
+
+    Args:
+        issue_key: Issue key (e.g., "ITPROJ-45")
+        transition_name: Transition name (case-insensitive)
+            Examples: "To Do", "In Progress", "In Review", "Done"
+
+    Returns:
+        {
+            'key': 'ITPROJ-45',
+            'new_status': 'In Progress',
+            'transitioned': '2026-02-04T...'
+        }
+
+    Raises:
+        ValueError: If transition not available (error includes valid transitions)
+    """
+    client = _get_client()
+    return client.transition_issue(issue_key=issue_key, transition_name=transition_name)

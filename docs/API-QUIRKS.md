@@ -114,6 +114,57 @@ Returns `201 Created` with:
 }
 ```
 
+### Transition Issue (POST)
+Returns `204 No Content` on success.
+
+## Transitions / Workflows
+
+### ITPROJ Workflow
+Issues created in "Backlog" status.
+
+```
+Backlog → To Do → In Progress → In Review → Done
+                                    ↓
+                              Needs Change → (back to In Progress)
+                                    ↓
+                               Blocked
+```
+
+Transition IDs (may vary):
+- To Do: 2
+- In Progress: 3
+- In Review: 4
+- Needs Change: 5
+- Blocked: 6
+- Done: 7
+
+### Transition API
+GET `/rest/api/3/issue/{key}/transitions` returns:
+```json
+{
+  "transitions": [
+    {
+      "id": "3",
+      "name": "In Progress",
+      "to": {
+        "name": "In Progress",
+        "id": "10014"
+      }
+    }
+  ]
+}
+```
+
+POST requires transition ID, not name:
+```json
+{"transition": {"id": "3"}}
+```
+
+### Notes
+- Transitions are state-dependent (only shows valid next states)
+- "Done" status may have no available transitions
+- Transition names are unique within available transitions
+
 ---
 
 *Last updated: 2026-02-04*

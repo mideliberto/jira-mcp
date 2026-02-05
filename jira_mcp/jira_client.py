@@ -459,3 +459,102 @@ class JiraClient:
             "comment_id": data.get("id"),
             "created": data.get("created"),
         }
+
+    def get_transitions(self, issue_key: str) -> list[dict[str, Any]]:
+        """
+        Get available transitions for an issue.
+
+        Args:
+            issue_key: Issue key (e.g., "ITPROJ-45")
+
+        Returns:
+            [
+                {'id': '2', 'name': 'To Do'},
+                {'id': '3', 'name': 'In Progress'},
+                ...
+            ]
+        """
+        response = self._request("GET", f"/rest/api/3/issue/{issue_key}/transitions")
+
+        if response.status_code == 404:
+            raise ValueError(f"Issue not found: {issue_key}")
+
+        response.raise_for_status()
+
+        data = response.json()
+        transitions = data.get("transitions", [])
+
+        return [
+            {"id": t["id"], "name": t["name"]}
+            for t in transitions
+        ]
+
+    def transition_issue(
+        self,
+        issue_key: str,
+        transition_name: str,
+    ) -> dict[str, Any]:
+        """
+        Transition issue through workflow.
+
+        Args:
+            issue_key: Issue key (e.g., "ITPROJ-45")
+            transition_name: Transition name (case-insensitive), e.g., "In Progress", "Done"
+
+        Returns:
+            {
+                'key': 'ITPROJ-45',
+                'new_status': 'In Progress',
+                'transitioned': '2026-02-04T...'
+            }
+
+        Raises:
+            ValueError: If transition not available (lists valid transitions)
+        """
+        # Get available transitions
+        transitions = self.get_transitions(issue_key)
+
+        if not transitions:
+            raise ValueError(f"No transitions available for {issue_key}")
+
+        # Find matching transition (case-insensitive)
+        transition_lower = transition_name.lower()
+        matches = [t for t in transitions if t["name"].lower() == transition_lower]
+
+        if not matches:
+            available = ", ".join(t["name"] for t in transitions)
+            raise ValueError(
+                f"Transition '{transition_name}' not available for {issue_key}. "
+                f"Available: {available}"
+            )
+
+        if len(matches) > 1:
+            match_names = ", ".join(t["name"] for t in matches)
+            raise ValueError(
+                f"Multiple transitions match '{transition_name}': {match_names}"
+            )
+
+        transition = matches[0]
+
+        # Execute transition
+        payload = {"transition": {"id": transition["id"]}}
+        response = self._request(
+            "POST",
+            f"/rest/api/3/issue/{issue_key}/transitions",
+            json_data=payload,
+        )
+
+        if response.status_code == 400:
+            error_data = response.json()
+            raise ValueError(f"Transition failed: {error_data}")
+
+        response.raise_for_status()
+
+        # Get updated issue to confirm new status
+        issue = self.get_issue(issue_key)
+
+        return {
+            "key": issue_key,
+            "new_status": issue["status"]["name"],
+            "transitioned": issue["updated"],
+        }
