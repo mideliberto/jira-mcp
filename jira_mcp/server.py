@@ -113,6 +113,7 @@ def create_issue(
     components: Optional[list[str]] = None,
     parent_key: Optional[str] = None,
     epic_link: Optional[str] = None,
+    custom_fields: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
     Create a new Jira issue.
@@ -135,6 +136,9 @@ def create_issue(
         components: List of component names
         parent_key: Parent issue key (required for Sub-task)
         epic_link: Epic issue key (for linking Task to Epic)
+        custom_fields: Custom field values as dict. Examples:
+            - ITHELP Work Type: {"customfield_10055": {"value": "Software"}}
+            - Work Type values: Hardware, Software, Access, Network, Security, Maintenance, Other
 
     Returns:
         Dictionary with:
@@ -153,6 +157,7 @@ def create_issue(
         components=components,
         parent_key=parent_key,
         epic_link=epic_link,
+        custom_fields=custom_fields,
     )
 
 

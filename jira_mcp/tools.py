@@ -99,6 +99,7 @@ def create_issue_tool(
     components: Optional[list[str]] = None,
     parent_key: Optional[str] = None,
     epic_link: Optional[str] = None,
+    custom_fields: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
     Create a new Jira issue.
@@ -114,6 +115,7 @@ def create_issue_tool(
         components: List of component names
         parent_key: Parent issue key (required for subtasks)
         epic_link: Epic issue key (for tasks under an epic)
+        custom_fields: Custom field values (e.g., {"customfield_10055": {"value": "Software"}} for ITHELP Work Type)
 
     Returns:
         {'key': 'ITPROJ-123', 'url': 'https://...'}
@@ -130,6 +132,7 @@ def create_issue_tool(
         components=components,
         parent_key=parent_key,
         epic_link=epic_link,
+        custom_fields=custom_fields,
     )
 
 

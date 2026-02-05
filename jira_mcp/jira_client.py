@@ -276,6 +276,7 @@ class JiraClient:
         components: Optional[list[str]] = None,
         parent_key: Optional[str] = None,
         epic_link: Optional[str] = None,
+        custom_fields: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         """
         Create a new issue.
@@ -291,6 +292,7 @@ class JiraClient:
             components: List of component names
             parent_key: Parent issue key (for subtasks)
             epic_link: Epic issue key (for tasks under an epic)
+            custom_fields: Custom field values (e.g., {"customfield_10055": {"value": "Software"}})
 
         Returns:
             {'key': 'ITPROJ-123', 'url': 'https://...'}
@@ -330,6 +332,10 @@ class JiraClient:
         # Epic link for tasks (customfield_10014)
         if epic_link:
             fields["customfield_10014"] = epic_link
+
+        # Add custom fields
+        if custom_fields:
+            fields.update(custom_fields)
 
         payload = {"fields": fields}
 

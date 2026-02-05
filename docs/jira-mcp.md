@@ -23,7 +23,7 @@ Jira Cloud integration server with 8 tools for managing work items.
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
-| `create_issue` | Create epic/task/subtask | `project`, `issue_type`, `summary`, `description`, `priority`, `assignee`, `labels`, `components`, `parent_key`, `epic_link` |
+| `create_issue` | Create epic/task/subtask | `project`, `issue_type`, `summary`, `description`, `priority`, `assignee`, `labels`, `components`, `parent_key`, `epic_link`, `custom_fields` |
 | `update_issue` | Update issue fields | `issue_key`, `summary`, `description`, `priority`, `assignee`, `labels`, `components` |
 | `add_comment` | Add comment to issue | `issue_key`, `body` |
 
@@ -109,6 +109,27 @@ create_issue(project="ITPROJ", issue_type="Task", summary="Phase 1", epic_link="
 # 3. Create Subtask under Task
 create_issue(project="ITPROJ", issue_type="Sub-task", summary="Document requirements", parent_key="ITPROJ-43")
 ```
+
+---
+
+## Custom Fields
+
+Use `custom_fields` parameter for project-specific required fields.
+
+### ITHELP Work Type (Required)
+
+ITHELP requires Work Type (`customfield_10055`). Use object format with `value` key:
+
+```python
+create_issue(
+    project="ITHELP",
+    issue_type="[System] Service request",
+    summary="Printer not working",
+    custom_fields={"customfield_10055": {"value": "Hardware"}}
+)
+```
+
+**Work Type values:** Hardware, Software, Access, Network, Security, Maintenance, Other
 
 ---
 
