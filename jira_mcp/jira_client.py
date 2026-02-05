@@ -236,3 +236,226 @@ class JiraClient:
 
         # Fallback for unexpected format
         return str(description) if description else None
+
+    def _to_adf(self, text: str) -> dict[str, Any]:
+        """
+        Convert plain text to Atlassian Document Format (ADF).
+
+        Args:
+            text: Plain text string
+
+        Returns:
+            ADF document dict
+        """
+        paragraphs = []
+        for line in text.split("\n"):
+            if line:
+                paragraphs.append({
+                    "type": "paragraph",
+                    "content": [{"type": "text", "text": line}]
+                })
+            else:
+                # Empty line becomes empty paragraph
+                paragraphs.append({"type": "paragraph", "content": []})
+
+        return {
+            "type": "doc",
+            "version": 1,
+            "content": paragraphs if paragraphs else [{"type": "paragraph", "content": []}]
+        }
+
+    def create_issue(
+        self,
+        project: str,
+        issue_type: str,
+        summary: str,
+        description: Optional[str] = None,
+        priority: Optional[str] = None,
+        assignee: Optional[str] = None,
+        labels: Optional[list[str]] = None,
+        components: Optional[list[str]] = None,
+        parent_key: Optional[str] = None,
+        epic_link: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """
+        Create a new issue.
+
+        Args:
+            project: Project key (e.g., "ITPROJ")
+            issue_type: Issue type name ("Epic", "Task", "Sub-task", etc.)
+            summary: Issue summary (required)
+            description: Issue description (plain text, converted to ADF)
+            priority: Priority name ("High", "Medium", "Low")
+            assignee: Assignee email or account ID
+            labels: List of label names
+            components: List of component names
+            parent_key: Parent issue key (for subtasks)
+            epic_link: Epic issue key (for tasks under an epic)
+
+        Returns:
+            {'key': 'ITPROJ-123', 'url': 'https://...'}
+        """
+        fields: dict[str, Any] = {
+            "project": {"key": project},
+            "issuetype": {"name": issue_type},
+            "summary": summary,
+        }
+
+        # Description is required by ITPROJ - default to summary if not provided
+        if description:
+            fields["description"] = self._to_adf(description)
+        else:
+            fields["description"] = self._to_adf(summary)
+
+        # Priority defaults to Medium
+        if priority:
+            fields["priority"] = {"name": priority}
+        else:
+            fields["priority"] = {"name": "Medium"}
+
+        if assignee:
+            # Try email format first
+            fields["assignee"] = {"id": assignee} if "@" not in assignee else {"emailAddress": assignee}
+
+        if labels:
+            fields["labels"] = labels
+
+        if components:
+            fields["components"] = [{"name": c} for c in components]
+
+        # Parent for subtasks
+        if parent_key:
+            fields["parent"] = {"key": parent_key}
+
+        # Epic link for tasks (customfield_10014)
+        if epic_link:
+            fields["customfield_10014"] = epic_link
+
+        payload = {"fields": fields}
+
+        response = self._request("POST", "/rest/api/3/issue", json_data=payload)
+
+        if response.status_code == 400:
+            error_data = response.json()
+            errors = error_data.get("errors", {})
+            error_messages = error_data.get("errorMessages", [])
+            raise ValueError(f"Create failed: {errors} {error_messages}")
+
+        if response.status_code == 404:
+            raise ValueError(f"Project or issue type not found: {project}/{issue_type}")
+
+        response.raise_for_status()
+
+        data = response.json()
+        issue_key = data.get("key")
+
+        return {
+            "key": issue_key,
+            "url": f"{self.base_url}/browse/{issue_key}",
+        }
+
+    def update_issue(
+        self,
+        issue_key: str,
+        fields: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Update issue fields.
+
+        Args:
+            issue_key: Issue key (e.g., "ITPROJ-123")
+            fields: Fields to update. Supported:
+                - summary: str
+                - description: str (plain text, converted to ADF)
+                - priority: str (e.g., "High")
+                - assignee: str (email or account ID)
+                - labels: list[str] (replaces existing)
+                - components: list[str] (replaces existing)
+
+        Returns:
+            {'key': 'ITPROJ-123', 'updated': '2026-02-04T...'}
+        """
+        update_fields: dict[str, Any] = {}
+
+        if "summary" in fields:
+            update_fields["summary"] = fields["summary"]
+
+        if "description" in fields:
+            update_fields["description"] = self._to_adf(fields["description"])
+
+        if "priority" in fields:
+            update_fields["priority"] = {"name": fields["priority"]}
+
+        if "assignee" in fields:
+            assignee = fields["assignee"]
+            update_fields["assignee"] = {"id": assignee} if "@" not in assignee else {"emailAddress": assignee}
+
+        if "labels" in fields:
+            update_fields["labels"] = fields["labels"]
+
+        if "components" in fields:
+            update_fields["components"] = [{"name": c} for c in fields["components"]]
+
+        payload = {"fields": update_fields}
+
+        response = self._request("PUT", f"/rest/api/3/issue/{issue_key}", json_data=payload)
+
+        if response.status_code == 404:
+            raise ValueError(f"Issue not found: {issue_key}")
+
+        if response.status_code == 400:
+            error_data = response.json()
+            raise ValueError(f"Update failed: {error_data}")
+
+        response.raise_for_status()
+
+        # PUT returns 204 No Content on success - get updated timestamp
+        issue = self.get_issue(issue_key)
+
+        return {
+            "key": issue_key,
+            "updated": issue.get("updated"),
+        }
+
+    def add_comment(
+        self,
+        issue_key: str,
+        body: str,
+        visibility: Optional[dict[str, str]] = None,
+    ) -> dict[str, Any]:
+        """
+        Add a comment to an issue.
+
+        Args:
+            issue_key: Issue key (e.g., "ITPROJ-123")
+            body: Comment text (plain text, converted to ADF)
+            visibility: Optional visibility restriction
+                {'type': 'role', 'value': 'Administrators'}
+
+        Returns:
+            {'comment_id': '12345', 'created': '2026-02-04T...'}
+        """
+        payload: dict[str, Any] = {
+            "body": self._to_adf(body)
+        }
+
+        if visibility:
+            payload["visibility"] = visibility
+
+        response = self._request("POST", f"/rest/api/3/issue/{issue_key}/comment", json_data=payload)
+
+        if response.status_code == 404:
+            raise ValueError(f"Issue not found: {issue_key}")
+
+        if response.status_code == 400:
+            error_data = response.json()
+            raise ValueError(f"Comment failed: {error_data}")
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        return {
+            "comment_id": data.get("id"),
+            "created": data.get("created"),
+        }
