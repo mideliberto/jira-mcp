@@ -1,6 +1,6 @@
 # jira-mcp Tool Reference
 
-Jira Cloud integration server with 8 tools for managing work items.
+Jira Cloud integration server with 9 tools for managing work items.
 
 ## Prerequisites
 
@@ -43,6 +43,57 @@ Jira Cloud integration server with 8 tools for managing work items.
 | Tool | Description | Parameters |
 |------|-------------|------------|
 | `delete_issue` | Permanently delete issue | `issue_key`, `confirm_delete` |
+
+---
+
+## Users (1 tool)
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `search_users` | Find users by name/email | `query`, `max_results` |
+
+### search_users
+
+Find Jira users by name or email to get account IDs for user fields.
+
+**Parameters:**
+- `query` (str, required) - Name or email to search
+- `max_results` (int, optional) - Maximum results (default 10)
+
+**Returns:**
+```python
+{
+    'users': [
+        {
+            'accountId': '712020:cddcfda5-f300-4dcb-b3c0-57dd7683978e',
+            'displayName': 'Shari Clark',
+            'emailAddress': 'sclark@pwphealth.com',
+            'active': True
+        }
+    ],
+    'count': 1
+}
+```
+
+**Example - Finding a user for approvers:**
+```python
+# Find the approver
+result = search_users("Shari Clark")
+shari_id = result['users'][0]['accountId']
+
+# Use in create_issue
+create_issue(
+    project='ITCM',
+    issue_type='Standard Change',
+    summary='Upgrade firewall',
+    approvers=[{'accountId': shari_id}]
+)
+```
+
+**Common searches:**
+- Full name: `"Shari Clark"`
+- Email: `"sclark@pwphealth.com"`
+- Partial: `"Clark"` (returns all matches)
 
 ---
 

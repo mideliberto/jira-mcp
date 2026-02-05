@@ -641,3 +641,39 @@ class JiraClient:
             "deleted": True,
             "deleted_at": datetime.now(timezone.utc).isoformat(),
         }
+
+    def search_users(
+        self,
+        query: str,
+        max_results: int = 50,
+    ) -> list[dict[str, Any]]:
+        """
+        Search for users in Jira instance.
+
+        Args:
+            query: Search string (name, email, username)
+            max_results: Maximum results to return (default 50)
+
+        Returns:
+            List of user dicts with accountId, displayName, emailAddress, active
+        """
+        params = {
+            "query": query,
+            "maxResults": max_results,
+        }
+
+        response = self._request("GET", "/rest/api/3/user/search", params=params)
+        response.raise_for_status()
+
+        data = response.json()
+
+        # Return list of users with relevant fields
+        return [
+            {
+                "accountId": user.get("accountId"),
+                "displayName": user.get("displayName"),
+                "emailAddress": user.get("emailAddress"),
+                "active": user.get("active", True),
+            }
+            for user in data
+        ]

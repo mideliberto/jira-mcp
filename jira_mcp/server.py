@@ -4,7 +4,7 @@ Jira MCP Server
 
 MCP server for Jira Cloud integration, enabling Claude to manage work items.
 
-Exposes 8 tools:
+Exposes 9 tools:
 - search_issues: Search with JQL
 - get_issue: Get full issue details
 - create_issue: Create epic/task/subtask
@@ -13,6 +13,7 @@ Exposes 8 tools:
 - transition_issue: Move through workflow states
 - get_transitions: Discover available transitions
 - delete_issue: Permanently delete (with confirmation)
+- search_users: Find users by name/email for account IDs
 """
 
 import os
@@ -338,6 +339,42 @@ def delete_issue(
 
     client = _get_client()
     return client.delete_issue(issue_key=issue_key)
+
+
+@mcp.tool()
+def search_users(
+    query: str,
+    max_results: int = 10,
+) -> dict[str, Any]:
+    """
+    Search for Jira users by name or email to get their account IDs.
+
+    Use this to find account IDs for user fields like approvers, assignee, etc.
+
+    Args:
+        query: Name or email to search for. Examples:
+            - Full name: "Shari Clark"
+            - Email: "sclark@pwphealth.com"
+            - Partial: "Clark" (returns all matches)
+        max_results: Maximum results to return (default 10)
+
+    Returns:
+        Dictionary with:
+        - users: List of matching users with accountId, displayName, emailAddress, active
+        - count: Number of results
+
+    Example:
+        result = search_users("Shari Clark")
+        account_id = result['users'][0]['accountId']
+        # Use in create_issue: approvers=[{'accountId': account_id}]
+    """
+    client = _get_client()
+    users = client.search_users(query=query, max_results=max_results)
+
+    return {
+        "users": users,
+        "count": len(users),
+    }
 
 
 def main() -> None:

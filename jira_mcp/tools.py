@@ -281,3 +281,36 @@ def delete_issue_tool(
 
     client = _get_client()
     return client.delete_issue(issue_key=issue_key)
+
+
+def search_users_tool(
+    query: str,
+    max_results: int = 10,
+) -> dict[str, Any]:
+    """
+    Search for Jira users by name or email.
+
+    Args:
+        query: Name or email to search for (e.g., "Shari Clark" or "sclark@pwphealth.com")
+        max_results: Maximum results to return (default 10)
+
+    Returns:
+        {
+            'users': [
+                {
+                    'accountId': '712020:...',
+                    'displayName': 'Shari Clark',
+                    'emailAddress': 'sclark@pwphealth.com',
+                    'active': True
+                }
+            ],
+            'count': 1
+        }
+    """
+    client = _get_client()
+    users = client.search_users(query=query, max_results=max_results)
+
+    return {
+        "users": users,
+        "count": len(users),
+    }
