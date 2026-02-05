@@ -558,3 +558,37 @@ class JiraClient:
             "new_status": issue["status"]["name"],
             "transitioned": issue["updated"],
         }
+
+    def delete_issue(self, issue_key: str) -> dict[str, Any]:
+        """
+        Delete an issue permanently.
+
+        WARNING: Cannot be undone. Use with caution.
+        For cleanup/testing. Consider transition to Done for normal workflow.
+
+        Note: Subtasks must be deleted before parents.
+
+        Args:
+            issue_key: Issue key (e.g., "ITPROJ-123")
+
+        Returns:
+            {'key': 'ITPROJ-123', 'deleted': True, 'deleted_at': '2026-02-04T...'}
+        """
+        from datetime import datetime, timezone
+
+        response = self._request("DELETE", f"/rest/api/3/issue/{issue_key}")
+
+        if response.status_code == 404:
+            raise ValueError(f"Issue not found: {issue_key}")
+
+        if response.status_code == 400:
+            error_data = response.json()
+            raise ValueError(f"Delete failed: {error_data}")
+
+        response.raise_for_status()
+
+        return {
+            "key": issue_key,
+            "deleted": True,
+            "deleted_at": datetime.now(timezone.utc).isoformat(),
+        }

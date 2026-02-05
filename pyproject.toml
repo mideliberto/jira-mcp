@@ -15,7 +15,12 @@ authors = [
 dependencies = [
     "requests>=2.31.0",
     "cryptography>=41.0.4",
+    "mcp>=1.0.0",
+    "python-dotenv>=1.0.0",
 ]
+
+[project.scripts]
+jira-mcp = "jira_mcp.server:main"
 
 [project.optional-dependencies]
 dev = [

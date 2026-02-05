@@ -220,3 +220,40 @@ def transition_issue_tool(
     """
     client = _get_client()
     return client.transition_issue(issue_key=issue_key, transition_name=transition_name)
+
+
+def delete_issue_tool(
+    issue_key: str,
+    confirm_delete: bool = False,
+) -> dict[str, Any]:
+    """
+    Permanently delete a Jira issue.
+
+    WARNING: This cannot be undone. For normal workflow, use transition_issue
+    to move to "Done" instead.
+
+    Note: Subtasks must be deleted before their parent tasks.
+
+    Args:
+        issue_key: Issue key (e.g., "ITPROJ-123")
+        confirm_delete: Must be True to proceed (safety check)
+
+    Returns:
+        {
+            'key': 'ITPROJ-123',
+            'deleted': True,
+            'deleted_at': '2026-02-04T...'
+        }
+
+    Raises:
+        ValueError: If confirm_delete is not True
+    """
+    if not confirm_delete:
+        raise ValueError(
+            f"delete_issue requires confirm_delete=True. "
+            f"This will permanently delete {issue_key} and cannot be undone. "
+            f"Consider transition_issue to 'Done' instead."
+        )
+
+    client = _get_client()
+    return client.delete_issue(issue_key=issue_key)

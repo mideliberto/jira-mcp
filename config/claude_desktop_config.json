@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "jira-pwp": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/Users/mike/dev/jira-mcp",
+        "run",
+        "jira-mcp"
+      ],
+      "env": {
+        "JIRA_ENCRYPTION_KEY": "Np5mQSiiKgdKYqTrRP8eOLlMb5iX4W5zXQbcnM99jFk="
+      }
+    }
+  }
+}
