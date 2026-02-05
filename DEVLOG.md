@@ -134,3 +134,18 @@
 - ITHELP: work_type (customfield_10055)
 - ITCM: work_type, risk_level, approvers, affected_systems, implementation_window_start/end, rollback_plan, approval_date
 - custom_fields parameter remains as escape hatch for unmapped fields
+
+### Phase 9: User Search Tool
+**Origin:** GitHub Issue #2
+**Task:** Add search_users tool for user lookup by name/email
+**Changes:**
+- Added search_users() to jira_client.py wrapping /rest/api/3/user/search
+- Added search_users_tool() wrapper to tools.py
+- Registered search_users MCP tool in server.py (now 9 tools)
+- Updated documentation with usage examples
+**Commits:** 5b08671
+**Status:** Complete
+**Notes:**
+- Enables looking up account IDs for user fields (approvers, assignee)
+- Search by full name, email, or partial match
+- Returns accountId, displayName, emailAddress, active status
