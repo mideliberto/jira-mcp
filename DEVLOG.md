@@ -85,3 +85,35 @@
 - get_transitions exposed as tool (deviation from 6-tool spec) for better UX
 - delete_issue added as 8th tool per Mike's request
 - Full integration test passes: Epic → Task → Subtask → Update → Comment → Transition → Done → Cleanup
+
+### Phase 6: Vault Integration & GitHub
+**Origin:** Chat decision
+**Task:** Integrate with PWP vault, publish to GitHub
+**Changes:**
+- Created docs/jira-mcp.md tool reference (google-mcp format)
+- Updated PWP vault .mcp.json with jira-pwp server config
+- Updated PWP _claude/MCP-REFERENCE.md with Jira section
+- Fixed mcp[cli] dependency (typer was missing)
+- Removed spec file from git history (contained API token)
+- Published to GitHub: github.com/mideliberto/jira-mcp
+**Commits:** ff4bb79, 07adda9 (history rewritten)
+**Status:** Complete
+**Notes:**
+- MCP config must use `.venv/bin/mcp run module:app` pattern (not uv)
+- mcp[cli] extra required for typer dependency
+- Spec file removed via git filter-branch to clear GitHub push protection
+
+### Phase 7: Custom Fields Support
+**Origin:** Chat decision
+**Task:** Add custom_fields parameter for project-specific required fields
+**Changes:**
+- Added custom_fields parameter to create_issue() in jira_client.py
+- Updated tools.py and server.py with custom_fields support
+- Documented ITHELP Work Type (customfield_10055) example
+- Custom field values require object format: {"value": "Software"}
+**Commits:** fa301b6
+**Status:** Complete
+**Notes:**
+- ITHELP requires Work Type field for ticket creation
+- Work Type values: Hardware, Software, Access, Network, Security, Maintenance, Other
+- Custom fields merge into Jira API request fields dict
