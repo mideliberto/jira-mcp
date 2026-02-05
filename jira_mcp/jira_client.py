@@ -9,6 +9,8 @@ from typing import Any, Optional
 
 import requests
 
+from jira_mcp.field_mappings import map_custom_fields, reverse_map_fields
+
 
 class JiraClient:
     """HTTP client for Jira Cloud REST API."""
@@ -209,6 +211,11 @@ class JiraClient:
         if resolution:
             result["resolution"] = resolution.get("name")
 
+        # Map custom fields to friendly names
+        project_key = fields.get("project", {}).get("key", "")
+        custom_field_data = map_custom_fields(project_key, fields)
+        result.update(custom_field_data)
+
         return result
 
     def _extract_description(self, description: Any) -> Optional[str]:
@@ -276,13 +283,20 @@ class JiraClient:
         components: Optional[list[str]] = None,
         parent_key: Optional[str] = None,
         epic_link: Optional[str] = None,
+        work_type: Optional[str] = None,
+        risk_level: Optional[str] = None,
+        approvers: Optional[list[dict[str, Any]]] = None,
+        affected_systems: Optional[list[str]] = None,
+        implementation_window_start: Optional[str] = None,
+        implementation_window_end: Optional[str] = None,
+        rollback_plan: Optional[str] = None,
         custom_fields: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         """
         Create a new issue.
 
         Args:
-            project: Project key (e.g., "ITPROJ")
+            project: Project key (e.g., "ITPROJ", "ITHELP", "ITCM")
             issue_type: Issue type name ("Epic", "Task", "Sub-task", etc.)
             summary: Issue summary (required)
             description: Issue description (plain text, converted to ADF)
@@ -292,7 +306,14 @@ class JiraClient:
             components: List of component names
             parent_key: Parent issue key (for subtasks)
             epic_link: Epic issue key (for tasks under an epic)
-            custom_fields: Custom field values (e.g., {"customfield_10055": {"value": "Software"}})
+            work_type: ITHELP/ITCM Work Type (Hardware, Software, Access, Network, Security, Maintenance, Other)
+            risk_level: ITCM Risk Level (Low, Medium, High)
+            approvers: ITCM Approvers list
+            affected_systems: ITCM Affected Systems
+            implementation_window_start: ITCM Implementation Window Start (ISO datetime)
+            implementation_window_end: ITCM Implementation Window End (ISO datetime)
+            rollback_plan: ITCM Rollback Plan (plain text)
+            custom_fields: Raw custom field values (escape hatch for unmapped fields)
 
         Returns:
             {'key': 'ITPROJ-123', 'url': 'https://...'}
@@ -333,7 +354,29 @@ class JiraClient:
         if epic_link:
             fields["customfield_10014"] = epic_link
 
-        # Add custom fields
+        # Build friendly fields dict and map to customfield IDs
+        friendly_fields: dict[str, Any] = {}
+        if work_type:
+            friendly_fields['work_type'] = {'value': work_type}
+        if risk_level:
+            friendly_fields['risk_level'] = {'value': risk_level}
+        if approvers:
+            friendly_fields['approvers'] = approvers
+        if affected_systems:
+            friendly_fields['affected_systems'] = affected_systems
+        if implementation_window_start:
+            friendly_fields['implementation_window_start'] = implementation_window_start
+        if implementation_window_end:
+            friendly_fields['implementation_window_end'] = implementation_window_end
+        if rollback_plan:
+            friendly_fields['rollback_plan'] = self._to_adf(rollback_plan)
+
+        # Map friendly names to customfield IDs
+        if friendly_fields:
+            mapped_fields = reverse_map_fields(project, friendly_fields)
+            fields.update(mapped_fields)
+
+        # Add raw custom fields (escape hatch for unmapped fields)
         if custom_fields:
             fields.update(custom_fields)
 

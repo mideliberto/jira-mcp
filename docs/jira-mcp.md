@@ -23,7 +23,7 @@ Jira Cloud integration server with 8 tools for managing work items.
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
-| `create_issue` | Create epic/task/subtask | `project`, `issue_type`, `summary`, `description`, `priority`, `assignee`, `labels`, `components`, `parent_key`, `epic_link`, `custom_fields` |
+| `create_issue` | Create epic/task/subtask | `project`, `issue_type`, `summary`, `description`, `priority`, `assignee`, `labels`, `components`, `parent_key`, `epic_link`, `work_type`, `risk_level`, `approvers`, `affected_systems`, `implementation_window_start`, `implementation_window_end`, `rollback_plan`, `custom_fields` |
 | `update_issue` | Update issue fields | `issue_key`, `summary`, `description`, `priority`, `assignee`, `labels`, `components` |
 | `add_comment` | Add comment to issue | `issue_key`, `body` |
 
@@ -114,22 +114,74 @@ create_issue(project="ITPROJ", issue_type="Sub-task", summary="Document requirem
 
 ## Custom Fields
 
-Use `custom_fields` parameter for project-specific required fields.
+PWP Jira projects use custom fields that vary by project. Use friendly parameter names instead of cryptic `customfield_XXXXX` IDs.
 
-### ITHELP Work Type (Required)
+### ITHELP
 
-ITHELP requires Work Type (`customfield_10055`). Use object format with `value` key:
+| Parameter | Description | Values |
+|-----------|-------------|--------|
+| `work_type` | Work Type (required) | Hardware, Software, Access, Network, Security, Maintenance, Other |
 
 ```python
 create_issue(
     project="ITHELP",
     issue_type="[System] Service request",
     summary="Printer not working",
-    custom_fields={"customfield_10055": {"value": "Hardware"}}
+    work_type="Hardware"
 )
 ```
 
-**Work Type values:** Hardware, Software, Access, Network, Security, Maintenance, Other
+### ITCM (Change Management)
+
+| Parameter | Description | Values |
+|-----------|-------------|--------|
+| `work_type` | Work Type | Hardware, Software, Access, Network, Security, Maintenance, Other |
+| `risk_level` | Risk Level | Low, Medium, High |
+| `approvers` | Approvers list | `[{"accountId": "..."}]` |
+| `affected_systems` | Affected Systems | List of strings |
+| `implementation_window_start` | Start time | ISO datetime |
+| `implementation_window_end` | End time | ISO datetime |
+| `rollback_plan` | Rollback Plan | Plain text |
+
+```python
+create_issue(
+    project="ITCM",
+    issue_type="Standard Change",
+    summary="Deploy new monitoring agent",
+    work_type="Software",
+    risk_level="Low",
+    rollback_plan="Uninstall agent via MDM"
+)
+```
+
+### get_issue Returns Friendly Names
+
+```python
+issue = get_issue("ITCM-1")
+# Returns:
+{
+    'key': 'ITCM-1',
+    'summary': '...',
+    'work_type': {'value': 'Software'},
+    'risk_level': {'value': 'Low'},
+    'custom_fields': {  # Unknown fields preserved here
+        'customfield_10099': '...'
+    }
+}
+```
+
+### Escape Hatch
+
+For unmapped fields, use `custom_fields` parameter with raw field IDs:
+
+```python
+create_issue(
+    project="ITCM",
+    issue_type="Standard Change",
+    summary="...",
+    custom_fields={"customfield_10099": {"value": "something"}}
+)
+```
 
 ---
 

@@ -113,6 +113,13 @@ def create_issue(
     components: Optional[list[str]] = None,
     parent_key: Optional[str] = None,
     epic_link: Optional[str] = None,
+    work_type: Optional[str] = None,
+    risk_level: Optional[str] = None,
+    approvers: Optional[list[dict[str, Any]]] = None,
+    affected_systems: Optional[list[str]] = None,
+    implementation_window_start: Optional[str] = None,
+    implementation_window_end: Optional[str] = None,
+    rollback_plan: Optional[str] = None,
     custom_fields: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
@@ -124,10 +131,11 @@ def create_issue(
     - Subtask: Use issue_type="Sub-task" with parent_key="ITPROJ-XX"
 
     Args:
-        project: Project key (e.g., "ITPROJ" for epics/tasks, "ITHELP" for service requests)
+        project: Project key (e.g., "ITPROJ", "ITHELP", "ITCM")
         issue_type: Issue type name:
             - ITPROJ: "Epic", "Task", "Sub-task"
             - ITHELP: "[System] Service request", "Question", etc.
+            - ITCM: "Standard Change", "Normal Change", "Emergency Change"
         summary: Issue title (required)
         description: Issue description (plain text, will be formatted)
         priority: Priority level ("High", "Medium", "Low") - defaults to "Medium"
@@ -136,9 +144,14 @@ def create_issue(
         components: List of component names
         parent_key: Parent issue key (required for Sub-task)
         epic_link: Epic issue key (for linking Task to Epic)
-        custom_fields: Custom field values as dict. Examples:
-            - ITHELP Work Type: {"customfield_10055": {"value": "Software"}}
-            - Work Type values: Hardware, Software, Access, Network, Security, Maintenance, Other
+        work_type: ITHELP/ITCM Work Type (Hardware, Software, Access, Network, Security, Maintenance, Other)
+        risk_level: ITCM Risk Level (Low, Medium, High)
+        approvers: ITCM Approvers list [{"accountId": "..."}]
+        affected_systems: ITCM Affected Systems list
+        implementation_window_start: ITCM Implementation Window Start (ISO datetime)
+        implementation_window_end: ITCM Implementation Window End (ISO datetime)
+        rollback_plan: ITCM Rollback Plan (plain text)
+        custom_fields: Raw custom field values (escape hatch for unmapped fields)
 
     Returns:
         Dictionary with:
@@ -157,6 +170,13 @@ def create_issue(
         components=components,
         parent_key=parent_key,
         epic_link=epic_link,
+        work_type=work_type,
+        risk_level=risk_level,
+        approvers=approvers,
+        affected_systems=affected_systems,
+        implementation_window_start=implementation_window_start,
+        implementation_window_end=implementation_window_end,
+        rollback_plan=rollback_plan,
         custom_fields=custom_fields,
     )
 

@@ -99,13 +99,20 @@ def create_issue_tool(
     components: Optional[list[str]] = None,
     parent_key: Optional[str] = None,
     epic_link: Optional[str] = None,
+    work_type: Optional[str] = None,
+    risk_level: Optional[str] = None,
+    approvers: Optional[list[dict[str, Any]]] = None,
+    affected_systems: Optional[list[str]] = None,
+    implementation_window_start: Optional[str] = None,
+    implementation_window_end: Optional[str] = None,
+    rollback_plan: Optional[str] = None,
     custom_fields: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
     Create a new Jira issue.
 
     Args:
-        project: Project key (e.g., "ITPROJ", "ITHELP")
+        project: Project key (e.g., "ITPROJ", "ITHELP", "ITCM")
         issue_type: Issue type ("Epic", "Task", "Sub-task", "[System] Service request", etc.)
         summary: Issue summary (required)
         description: Issue description (optional, plain text)
@@ -115,7 +122,14 @@ def create_issue_tool(
         components: List of component names
         parent_key: Parent issue key (required for subtasks)
         epic_link: Epic issue key (for tasks under an epic)
-        custom_fields: Custom field values (e.g., {"customfield_10055": {"value": "Software"}} for ITHELP Work Type)
+        work_type: ITHELP/ITCM Work Type (Hardware, Software, Access, Network, Security, Maintenance, Other)
+        risk_level: ITCM Risk Level (Low, Medium, High)
+        approvers: ITCM Approvers list
+        affected_systems: ITCM Affected Systems
+        implementation_window_start: ITCM Implementation Window Start (ISO datetime)
+        implementation_window_end: ITCM Implementation Window End (ISO datetime)
+        rollback_plan: ITCM Rollback Plan (plain text)
+        custom_fields: Raw custom field values (escape hatch for unmapped fields)
 
     Returns:
         {'key': 'ITPROJ-123', 'url': 'https://...'}
@@ -132,6 +146,13 @@ def create_issue_tool(
         components=components,
         parent_key=parent_key,
         epic_link=epic_link,
+        work_type=work_type,
+        risk_level=risk_level,
+        approvers=approvers,
+        affected_systems=affected_systems,
+        implementation_window_start=implementation_window_start,
+        implementation_window_end=implementation_window_end,
+        rollback_plan=rollback_plan,
         custom_fields=custom_fields,
     )
 
