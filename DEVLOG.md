@@ -66,3 +66,22 @@
 - Issues created in "Backlog" status by default
 - Transitions require ID (API lookup by name)
 - "Done" status has no available transitions (terminal state)
+
+### Phase 5: MCP Server & Documentation - 8 Tools Complete
+**Origin:** Chat decision
+**Task:** Implement MCP server, complete documentation, add delete_issue
+**Changes:**
+- Created jira_mcp/server.py with FastMCP framework
+- Registered 8 tools: search_issues, get_issue, create_issue, update_issue, add_comment, transition_issue, get_transitions, delete_issue
+- Added delete_issue with confirm_delete safety check
+- Created config/claude_desktop_config.json for Claude Desktop
+- Created docs/USAGE.md with complete tool reference
+- Updated README.md with setup instructions
+- Created tests/integration/test_full_workflow.py
+- Updated pyproject.toml with mcp dependency and jira-mcp entry point
+**Commits:** ad8da4e
+**Status:** Complete
+**Notes:**
+- get_transitions exposed as tool (deviation from 6-tool spec) for better UX
+- delete_issue added as 8th tool per Mike's request
+- Full integration test passes: Epic → Task → Subtask → Update → Comment → Transition → Done → Cleanup
