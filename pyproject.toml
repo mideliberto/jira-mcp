@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jira-mcp"
+version = "0.1.0"
+description = "A Model Context Protocol (MCP) server for Jira Cloud integration"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Mike Deliberto"}
+]
+dependencies = [
+    "requests>=2.31.0",
+    "cryptography>=41.0.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.2",
+    "black>=23.9.1",
+    "mypy>=1.6.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["jira_mcp*"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
