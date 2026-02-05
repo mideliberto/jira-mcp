@@ -49,3 +49,20 @@
 - Description field requires ADF format, not plain text
 - ITHELP is service desk (no Epic/Task), ITPROJ has standard types
 - Description is required in ITPROJ project
+
+### Phase 4: Transitions - Workflow State Management
+**Origin:** Chat decision
+**Task:** Implement transition_issue tool for workflow state changes
+**Changes:**
+- Added get_transitions() method to discover available transitions
+- Added transition_issue() with case-insensitive name matching
+- Added get_transitions_tool() and transition_issue_tool() wrappers
+- Created tests/test_transitions.py and scripts/test_phase4.py
+- Updated API-QUIRKS.md with workflow documentation
+- Verified full workflow: Backlog → To Do → In Progress → In Review → Done
+**Commits:** e39cb5c
+**Status:** Complete
+**Notes:**
+- Issues created in "Backlog" status by default
+- Transitions require ID (API lookup by name)
+- "Done" status has no available transitions (terminal state)
