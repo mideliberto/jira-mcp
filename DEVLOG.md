@@ -117,3 +117,20 @@
 - ITHELP requires Work Type field for ticket creation
 - Work Type values: Hardware, Software, Access, Network, Security, Maintenance, Other
 - Custom fields merge into Jira API request fields dict
+
+### Phase 8: Friendly Field Name Mapping
+**Origin:** GitHub Issue #1
+**Task:** Map cryptic customfield_XXXXX IDs to friendly parameter names
+**Changes:**
+- Created jira_mcp/field_mappings.py with PROJECT_FIELDS mapping
+- get_issue() returns work_type, risk_level, etc. instead of customfield_XXXXX
+- create_issue() accepts work_type, risk_level, approvers, affected_systems,
+  implementation_window_start/end, rollback_plan as named parameters
+- Unknown custom fields preserved in 'custom_fields' dict
+- Updated documentation with ITHELP and ITCM examples
+**Commits:** 9d580d9
+**Status:** Complete
+**Notes:**
+- ITHELP: work_type (customfield_10055)
+- ITCM: work_type, risk_level, approvers, affected_systems, implementation_window_start/end, rollback_plan, approval_date
+- custom_fields parameter remains as escape hatch for unmapped fields
