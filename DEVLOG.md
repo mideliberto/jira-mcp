@@ -28,3 +28,24 @@
 **Commits:** 44a7aa1
 **Status:** Complete
 **Notes:** Jira API changed - /rest/api/3/search returns 410 Gone, must use /rest/api/3/search/jql
+
+### Phase 3: Write Operations - Create, Update, Comment
+**Origin:** Chat decision
+**Task:** Implement create_issue, update_issue, and add_comment tools
+**Changes:**
+- Added create_issue() with epic/task/subtask hierarchy support
+- Added update_issue() for field modifications
+- Added add_comment() for issue comments
+- Added _to_adf() helper for plain text to ADF conversion
+- Epic link uses customfield_10014
+- Parent for subtasks uses parent: {key: "..."}
+- Created tests/test_create.py, test_update.py, test_comment.py
+- Created scripts/test_phase3.py integration test
+- Created docs/API-QUIRKS.md documenting field formats
+- Verified full hierarchy creation in ITPROJ project
+**Commits:** 150bdab
+**Status:** Complete
+**Notes:**
+- Description field requires ADF format, not plain text
+- ITHELP is service desk (no Epic/Task), ITPROJ has standard types
+- Description is required in ITPROJ project
