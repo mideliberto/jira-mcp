@@ -184,3 +184,21 @@
 - Client singleton avoids re-authenticating on every tool call
 - ADF extraction now preserves structure (headings, lists, code blocks, quotes)
 - Single test file with finally-block cleanup replaces 10+ test files
+
+### Phase 12: File Attachments
+**Origin:** GitHub Issue #3
+**Task:** Add attach_file tool for uploading file attachments to Jira issues
+**Changes:**
+- Added attach_file() method to jira_mcp/jira_client.py
+  - Uses requests.post directly for multipart/form-data (not _request())
+  - Requires X-Atlassian-Token: no-check header
+  - Validates file exists before API call
+- Added attach_file tool to jira_mcp/server.py (now 10 tools)
+  - Expands ~ and resolves relative paths
+- Updated docs/USAGE.md and docs/jira-mcp.md with attach_file section
+**Commits:** 837bf3a
+**Status:** Complete
+**Notes:**
+- API: POST /rest/api/3/issue/{issueKey}/attachments
+- Returns attachment id, filename, and size
+- File path supports absolute, ~, and relative paths
