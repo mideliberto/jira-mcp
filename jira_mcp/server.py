@@ -191,6 +191,14 @@ def update_issue(
     assignee: Optional[str] = None,
     labels: Optional[list[str]] = None,
     components: Optional[list[str]] = None,
+    work_type: Optional[str] = None,
+    risk_level: Optional[str] = None,
+    approvers: Optional[list[dict[str, Any]]] = None,
+    affected_systems: Optional[list[str]] = None,
+    implementation_window_start: Optional[str] = None,
+    implementation_window_end: Optional[str] = None,
+    rollback_plan: Optional[str] = None,
+    custom_fields: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
     Update fields on an existing Jira issue.
@@ -205,6 +213,14 @@ def update_issue(
         assignee: New assignee (email or account ID)
         labels: New labels (replaces existing)
         components: New components (replaces existing)
+        work_type: ITHELP/ITCM Work Type (Hardware, Software, Access, Network, Security, Maintenance, Other)
+        risk_level: ITCM Risk Level (Low, Medium, High)
+        approvers: ITCM Approvers list [{"accountId": "..."}]
+        affected_systems: ITCM Affected Systems list
+        implementation_window_start: ITCM Implementation Window Start (ISO datetime)
+        implementation_window_end: ITCM Implementation Window End (ISO datetime)
+        rollback_plan: ITCM Rollback Plan (plain text)
+        custom_fields: Raw custom field values (escape hatch for unmapped fields)
 
     Returns:
         Dictionary with:
@@ -225,12 +241,26 @@ def update_issue(
         fields["labels"] = labels
     if components is not None:
         fields["components"] = components
+    if work_type is not None:
+        fields["work_type"] = work_type
+    if risk_level is not None:
+        fields["risk_level"] = risk_level
+    if approvers is not None:
+        fields["approvers"] = approvers
+    if affected_systems is not None:
+        fields["affected_systems"] = affected_systems
+    if implementation_window_start is not None:
+        fields["implementation_window_start"] = implementation_window_start
+    if implementation_window_end is not None:
+        fields["implementation_window_end"] = implementation_window_end
+    if rollback_plan is not None:
+        fields["rollback_plan"] = rollback_plan
 
-    if not fields:
+    if not fields and not custom_fields:
         raise ValueError("At least one field must be provided to update")
 
     client = _get_client()
-    return client.update_issue(issue_key=issue_key, fields=fields)
+    return client.update_issue(issue_key=issue_key, fields=fields, custom_fields=custom_fields)
 
 
 @mcp.tool()

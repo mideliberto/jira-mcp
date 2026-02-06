@@ -24,7 +24,7 @@ Jira Cloud integration server with 9 tools for managing work items.
 | Tool | Description | Parameters |
 |------|-------------|------------|
 | `create_issue` | Create epic/task/subtask | `project`, `issue_type`, `summary`, `description`, `priority`, `assignee`, `labels`, `components`, `parent_key`, `epic_link`, `work_type`, `risk_level`, `approvers`, `affected_systems`, `implementation_window_start`, `implementation_window_end`, `rollback_plan`, `custom_fields` |
-| `update_issue` | Update issue fields | `issue_key`, `summary`, `description`, `priority`, `assignee`, `labels`, `components` |
+| `update_issue` | Update issue fields | `issue_key`, `summary`, `description`, `priority`, `assignee`, `labels`, `components`, `work_type`, `risk_level`, `approvers`, `affected_systems`, `implementation_window_start`, `implementation_window_end`, `rollback_plan`, `custom_fields` |
 | `add_comment` | Add comment to issue | `issue_key`, `body` |
 
 ---

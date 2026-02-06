@@ -408,6 +408,7 @@ class JiraClient:
         self,
         issue_key: str,
         fields: dict[str, Any],
+        custom_fields: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         """
         Update issue fields.
@@ -421,10 +422,21 @@ class JiraClient:
                 - assignee: str (email or account ID)
                 - labels: list[str] (replaces existing)
                 - components: list[str] (replaces existing)
+                - work_type: str (Hardware, Software, etc.)
+                - risk_level: str (Low, Medium, High)
+                - approvers: list[dict] ([{'accountId': '...'}])
+                - affected_systems: list[str]
+                - implementation_window_start: str (ISO datetime)
+                - implementation_window_end: str (ISO datetime)
+                - rollback_plan: str (plain text)
+            custom_fields: Raw custom field values (escape hatch for unmapped fields)
 
         Returns:
             {'key': 'ITPROJ-123', 'updated': '2026-02-04T...'}
         """
+        # Extract project key from issue key (e.g., "ITPROJ-123" -> "ITPROJ")
+        project = issue_key.rsplit("-", 1)[0]
+
         update_fields: dict[str, Any] = {}
 
         if "summary" in fields:
@@ -445,6 +457,32 @@ class JiraClient:
 
         if "components" in fields:
             update_fields["components"] = [{"name": c} for c in fields["components"]]
+
+        # Build friendly fields dict for custom field mapping
+        friendly_fields: dict[str, Any] = {}
+        if "work_type" in fields:
+            friendly_fields["work_type"] = {"value": fields["work_type"]}
+        if "risk_level" in fields:
+            friendly_fields["risk_level"] = {"value": fields["risk_level"]}
+        if "approvers" in fields:
+            friendly_fields["approvers"] = fields["approvers"]
+        if "affected_systems" in fields:
+            friendly_fields["affected_systems"] = fields["affected_systems"]
+        if "implementation_window_start" in fields:
+            friendly_fields["implementation_window_start"] = fields["implementation_window_start"]
+        if "implementation_window_end" in fields:
+            friendly_fields["implementation_window_end"] = fields["implementation_window_end"]
+        if "rollback_plan" in fields:
+            friendly_fields["rollback_plan"] = self._to_adf(fields["rollback_plan"])
+
+        # Map friendly names to customfield IDs
+        if friendly_fields:
+            mapped_fields = reverse_map_fields(project, friendly_fields)
+            update_fields.update(mapped_fields)
+
+        # Add raw custom fields (escape hatch for unmapped fields)
+        if custom_fields:
+            update_fields.update(custom_fields)
 
         payload = {"fields": update_fields}
 
