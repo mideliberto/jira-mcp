@@ -149,3 +149,20 @@
 - Enables looking up account IDs for user fields (approvers, assignee)
 - Search by full name, email, or partial match
 - Returns accountId, displayName, emailAddress, active status
+
+### Phase 10: Cleanup & Hardening
+**Origin:** Chat decision
+**Task:** Cleanup pass - gitignore, timeouts, remove dead code, update_issue custom fields
+**Changes:**
+- Updated .gitignore: added claude_desktop_config.json, encryption_salt, .python-version
+- Untracked sensitive files with git rm --cached
+- Added timeout=30 to _request() in jira_client.py
+- Deleted dead tools.py layer (server.py reimplements everything)
+- Updated all tests to import from jira_client and credential_manager directly
+- Added custom field support to update_issue (work_type, risk_level, approvers, etc.)
+- Updated docs/jira-mcp.md with new update_issue parameters
+**Commits:** d51d30c, 2ddda90, 794dd6c, 529a723
+**Status:** Complete
+**Notes:**
+- tools.py was redundant thin wrapper around jira_client methods
+- update_issue now has parity with create_issue for custom fields
