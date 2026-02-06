@@ -22,30 +22,37 @@ from typing import Any, Optional
 
 from mcp.server.fastmcp import FastMCP
 
+from jira_mcp.jira_client import JiraClient
+
 # Create FastMCP application
 mcp = FastMCP(
     name=os.getenv("MCP_SERVER_NAME", "Jira MCP"),
 )
 
+# Lazy singleton client
+_client: JiraClient | None = None
 
-def _get_client():
-    """Get authenticated JiraClient instance."""
-    from jira_mcp.auth.credential_manager import get_credential_manager
-    from jira_mcp.jira_client import JiraClient
 
-    manager = get_credential_manager()
-    credentials = manager.get_credentials()
+def _get_client() -> JiraClient:
+    """Get authenticated JiraClient instance (cached singleton)."""
+    global _client
+    if _client is None:
+        from jira_mcp.auth.credential_manager import get_credential_manager
 
-    if not credentials:
-        raise RuntimeError(
-            "No Jira credentials found. Run: python scripts/setup_credentials.py"
+        manager = get_credential_manager()
+        credentials = manager.get_credentials()
+
+        if not credentials:
+            raise RuntimeError(
+                "No Jira credentials found. Run: python scripts/setup_credentials.py"
+            )
+
+        _client = JiraClient(
+            base_url=credentials["base_url"],
+            email=credentials["email"],
+            api_token=credentials["api_token"],
         )
-
-    return JiraClient(
-        base_url=credentials["base_url"],
-        email=credentials["email"],
-        api_token=credentials["api_token"],
-    )
+    return _client
 
 
 @mcp.tool()
