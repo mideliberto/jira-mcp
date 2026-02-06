@@ -4,7 +4,7 @@ Jira MCP Server
 
 MCP server for Jira Cloud integration, enabling Claude to manage work items.
 
-Exposes 9 tools:
+Exposes 10 tools:
 - search_issues: Search with JQL
 - get_issue: Get full issue details
 - create_issue: Create epic/task/subtask
@@ -14,6 +14,7 @@ Exposes 9 tools:
 - get_transitions: Discover available transitions
 - delete_issue: Permanently delete (with confirmation)
 - search_users: Find users by name/email for account IDs
+- attach_file: Upload file attachments to issues
 """
 
 import os
@@ -412,6 +413,47 @@ def search_users(
         "users": users,
         "count": len(users),
     }
+
+
+@mcp.tool()
+def attach_file(
+    issue_key: str,
+    file_path: str,
+    filename: Optional[str] = None,
+) -> dict[str, Any]:
+    """
+    Attach a file to a Jira issue.
+
+    Args:
+        issue_key: Issue key (e.g., "ITPROJ-123")
+        file_path: Path to file to upload. Supports:
+            - Absolute paths: "/Users/mike/report.pdf"
+            - Home directory: "~/Documents/report.pdf"
+            - Relative paths: "./report.pdf"
+        filename: Override filename in Jira (default: basename of file_path)
+
+    Returns:
+        Dictionary with:
+        - key: Issue key
+        - filename: Filename as stored in Jira
+        - id: Attachment ID
+        - size: File size in bytes
+
+    Raises:
+        FileNotFoundError: If file does not exist
+        ValueError: If issue not found or upload fails
+    """
+    from pathlib import Path
+
+    # Expand ~ and resolve path
+    resolved_path = Path(file_path).expanduser().resolve()
+
+    client = _get_client()
+    return client.attach_file(
+        issue_key=issue_key,
+        file_path=str(resolved_path),
+        filename=filename,
+    )
 
 
 def main() -> None:

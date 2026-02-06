@@ -269,6 +269,49 @@ delete ITPROJ-50 and cannot be undone. Consider transition_issue to 'Done' inste
 
 ---
 
+### attach_file
+
+Upload a file attachment to an issue.
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| issue_key | string | Yes | Issue key |
+| file_path | string | Yes | Path to file (supports ~ and relative paths) |
+| filename | string | No | Override filename in Jira |
+
+**Example:**
+```python
+attach_file(
+    issue_key="ITPROJ-42",
+    file_path="~/Documents/migration-plan.pdf"
+)
+# Returns: {"key": "ITPROJ-42", "filename": "migration-plan.pdf", "id": "10001", "size": 245678}
+
+# With custom filename
+attach_file(
+    issue_key="ITPROJ-42",
+    file_path="/tmp/report.pdf",
+    filename="Q1-Migration-Report.pdf"
+)
+```
+
+**Returns:**
+```json
+{
+  "key": "ITPROJ-42",
+  "filename": "migration-plan.pdf",
+  "id": "10001",
+  "size": 245678
+}
+```
+
+**Errors:**
+- `FileNotFoundError` if file doesn't exist
+- `ValueError` if issue not found or attachments disabled
+
+---
+
 ## Common Workflows
 
 ### Project Decomposition

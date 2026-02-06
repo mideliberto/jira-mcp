@@ -785,3 +785,74 @@ class JiraClient:
             }
             for user in data
         ]
+
+    def attach_file(
+        self,
+        issue_key: str,
+        file_path: str,
+        filename: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """
+        Attach a file to a Jira issue.
+
+        Args:
+            issue_key: Issue key (e.g., "ITPROJ-123")
+            file_path: Path to file to upload
+            filename: Override filename in Jira (default: basename of file_path)
+
+        Returns:
+            {'key': 'ITPROJ-123', 'filename': 'report.pdf', 'id': '10001', 'size': 12345}
+
+        Raises:
+            FileNotFoundError: If file does not exist
+            ValueError: If upload fails
+        """
+        import os
+        from pathlib import Path
+
+        # Validate file exists
+        path = Path(file_path)
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {file_path}")
+
+        # Use basename if filename not provided
+        if filename is None:
+            filename = path.name
+
+        # Multipart upload requires different headers than _request()
+        url = f"{self.base_url}/rest/api/3/issue/{issue_key}/attachments"
+        headers = {
+            "Authorization": self.auth_header,
+            "X-Atlassian-Token": "no-check",
+        }
+
+        with open(file_path, "rb") as f:
+            response = requests.post(
+                url,
+                headers=headers,
+                files={"file": (filename, f)},
+                timeout=30,
+            )
+
+        if response.status_code == 404:
+            raise ValueError(f"Issue not found: {issue_key}")
+
+        if response.status_code == 403:
+            raise ValueError(f"Attachments disabled or no permission for {issue_key}")
+
+        if response.status_code == 400:
+            error_data = response.json()
+            raise ValueError(f"Attachment failed: {error_data}")
+
+        response.raise_for_status()
+
+        # Response is a list with one attachment
+        data = response.json()
+        attachment = data[0] if data else {}
+
+        return {
+            "key": issue_key,
+            "filename": attachment.get("filename", filename),
+            "id": attachment.get("id"),
+            "size": attachment.get("size"),
+        }

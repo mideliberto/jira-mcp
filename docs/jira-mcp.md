@@ -1,6 +1,6 @@
 # jira-mcp Tool Reference
 
-Jira Cloud integration server with 9 tools for managing work items.
+Jira Cloud integration server with 10 tools for managing work items.
 
 ## Prerequisites
 
@@ -94,6 +94,41 @@ create_issue(
 - Full name: `"Shari Clark"`
 - Email: `"sclark@pwphealth.com"`
 - Partial: `"Clark"` (returns all matches)
+
+---
+
+## Attachments (1 tool)
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `attach_file` | Upload file to issue | `issue_key`, `file_path`, `filename` |
+
+### attach_file
+
+Upload a file attachment to a Jira issue.
+
+**Parameters:**
+- `issue_key` (str, required) - Issue key like "ITPROJ-123"
+- `file_path` (str, required) - Path to file (supports ~ and relative paths)
+- `filename` (str, optional) - Override filename in Jira
+
+**Returns:**
+```python
+{
+    'key': 'ITPROJ-123',
+    'filename': 'report.pdf',
+    'id': '10001',
+    'size': 245678
+}
+```
+
+**Example:**
+```python
+attach_file(
+    issue_key="ITPROJ-42",
+    file_path="~/Documents/migration-plan.pdf"
+)
+```
 
 ---
 
