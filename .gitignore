@@ -12,6 +12,11 @@ build/
 
 # Credentials (never commit)
 config/credentials.json
+config/claude_desktop_config.json
+encryption_salt
+
+# Environment
+.python-version
 
 # IDE
 .idea/
