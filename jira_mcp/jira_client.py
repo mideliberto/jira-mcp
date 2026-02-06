@@ -66,6 +66,7 @@ class JiraClient:
             headers=headers,
             params=params,
             json=json_data,
+            timeout=30,
         )
 
         return response
