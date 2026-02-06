@@ -223,6 +223,9 @@ class JiraClient:
         """
         Extract plain text from Jira's ADF (Atlassian Document Format) description.
 
+        Handles: paragraph, heading, bulletList, orderedList, codeBlock, blockquote.
+        Unknown node types extract text children gracefully.
+
         Args:
             description: ADF document or None
 
@@ -232,18 +235,84 @@ class JiraClient:
         if description is None:
             return None
 
-        # ADF is a JSON structure - extract text from paragraph nodes
         if isinstance(description, dict) and description.get("type") == "doc":
-            texts = []
-            for content in description.get("content", []):
-                if content.get("type") == "paragraph":
-                    for item in content.get("content", []):
-                        if item.get("type") == "text":
-                            texts.append(item.get("text", ""))
-            return "\n".join(texts) if texts else None
+            lines = self._extract_adf_node(description)
+            return "\n".join(lines) if lines else None
 
         # Fallback for unexpected format
         return str(description) if description else None
+
+    def _extract_adf_node(self, node: dict[str, Any], list_index: int = 0) -> list[str]:
+        """Recursively extract text from ADF node."""
+        node_type = node.get("type", "")
+        content = node.get("content", [])
+        lines: list[str] = []
+
+        if node_type == "doc":
+            for child in content:
+                lines.extend(self._extract_adf_node(child))
+
+        elif node_type == "paragraph":
+            text = self._extract_text_content(content)
+            if text:
+                lines.append(text)
+
+        elif node_type == "heading":
+            level = node.get("attrs", {}).get("level", 1)
+            text = self._extract_text_content(content)
+            if text:
+                lines.append(f"{'#' * level} {text}")
+
+        elif node_type == "bulletList":
+            for child in content:
+                child_lines = self._extract_adf_node(child)
+                for line in child_lines:
+                    lines.append(f"- {line}")
+
+        elif node_type == "orderedList":
+            for i, child in enumerate(content, start=1):
+                child_lines = self._extract_adf_node(child)
+                for line in child_lines:
+                    lines.append(f"{i}. {line}")
+
+        elif node_type == "listItem":
+            text = self._extract_text_content(content)
+            if text:
+                lines.append(text)
+            for child in content:
+                if child.get("type") not in ("text", "paragraph"):
+                    lines.extend(self._extract_adf_node(child))
+
+        elif node_type == "codeBlock":
+            text = self._extract_text_content(content)
+            lines.append("```")
+            if text:
+                lines.append(text)
+            lines.append("```")
+
+        elif node_type == "blockquote":
+            for child in content:
+                child_lines = self._extract_adf_node(child)
+                for line in child_lines:
+                    lines.append(f"> {line}")
+
+        else:
+            # Unknown node type: try to extract any text content
+            text = self._extract_text_content(content)
+            if text:
+                lines.append(text)
+
+        return lines
+
+    def _extract_text_content(self, content: list[dict[str, Any]]) -> str:
+        """Extract text from a list of inline content nodes."""
+        texts = []
+        for item in content:
+            if item.get("type") == "text":
+                texts.append(item.get("text", ""))
+            elif item.get("type") == "paragraph":
+                texts.append(self._extract_text_content(item.get("content", [])))
+        return "".join(texts)
 
     def _to_adf(self, text: str) -> dict[str, Any]:
         """
