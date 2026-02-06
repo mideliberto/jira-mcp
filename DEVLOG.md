@@ -166,3 +166,21 @@
 **Notes:**
 - tools.py was redundant thin wrapper around jira_client methods
 - update_issue now has parity with create_issue for custom fields
+
+### Phase 11: Code Review Items
+**Origin:** Chat code review (continued)
+**Task:** Lazy singleton, ADF extraction, test consolidation
+**Changes:**
+- jira_mcp/server.py: Lazy singleton pattern for _get_client() (caches JiraClient)
+- jira_mcp/jira_client.py: Expanded _extract_description() to handle heading, bulletList,
+  orderedList, codeBlock, blockquote ADF nodes
+- Created tests/test_integration.py: consolidated test suite with proper cleanup
+- Deleted: tests/test_search.py, test_get.py, test_create.py, test_update.py,
+  test_comment.py, test_transitions.py, tests/integration/ directory
+- Deleted: scripts/test_phase2.py, test_phase3.py, test_phase4.py
+**Commits:** 8535b3c, f365980, 01cb4d4
+**Status:** Complete
+**Notes:**
+- Client singleton avoids re-authenticating on every tool call
+- ADF extraction now preserves structure (headings, lists, code blocks, quotes)
+- Single test file with finally-block cleanup replaces 10+ test files
