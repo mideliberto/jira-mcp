@@ -7,12 +7,29 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from jira_mcp.tools import create_issue_tool, get_issue_tool
+from jira_mcp.auth.credential_manager import get_credential_manager
+from jira_mcp.jira_client import JiraClient
+
+
+def _get_client() -> JiraClient:
+    """Get an authenticated JiraClient instance."""
+    manager = get_credential_manager()
+    credentials = manager.get_credentials()
+    if not credentials:
+        raise RuntimeError(
+            "No Jira credentials found. Run: python scripts/setup_credentials.py"
+        )
+    return JiraClient(
+        base_url=credentials["base_url"],
+        email=credentials["email"],
+        api_token=credentials["api_token"],
+    )
 
 
 def test_create_task():
     """Test creating a simple task."""
-    result = create_issue_tool(
+    client = _get_client()
+    result = client.create_issue(
         project="ITPROJ",
         issue_type="Task",
         summary="TEST - Create task test - DELETE ME",
@@ -26,7 +43,7 @@ def test_create_task():
     print(f"URL: {result['url']}")
 
     # Verify it exists
-    issue = get_issue_tool(result["key"])
+    issue = client.get_issue(result["key"])
     assert issue["summary"] == "TEST - Create task test - DELETE ME"
     print(f"Verified: {issue['summary']}")
 
@@ -35,14 +52,15 @@ def test_create_task():
 
 def test_create_with_priority():
     """Test creating an issue with priority."""
-    result = create_issue_tool(
+    client = _get_client()
+    result = client.create_issue(
         project="ITPROJ",
         issue_type="Task",
         summary="TEST - High priority task - DELETE ME",
         priority="High",
     )
 
-    issue = get_issue_tool(result["key"])
+    issue = client.get_issue(result["key"])
     assert issue["priority"] == "High"
     print(f"Created high priority task: {result['key']}")
 

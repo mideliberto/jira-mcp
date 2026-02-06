@@ -1,6 +1,5 @@
 """Tests for get_issue functionality."""
 
-import os
 import sys
 from pathlib import Path
 
@@ -8,13 +7,31 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from jira_mcp.tools import search_issues_tool, get_issue_tool
+from jira_mcp.auth.credential_manager import get_credential_manager
+from jira_mcp.jira_client import JiraClient
+
+
+def _get_client() -> JiraClient:
+    """Get an authenticated JiraClient instance."""
+    manager = get_credential_manager()
+    credentials = manager.get_credentials()
+    if not credentials:
+        raise RuntimeError(
+            "No Jira credentials found. Run: python scripts/setup_credentials.py"
+        )
+    return JiraClient(
+        base_url=credentials["base_url"],
+        email=credentials["email"],
+        api_token=credentials["api_token"],
+    )
 
 
 def test_get_issue():
     """Test getting a specific issue."""
+    client = _get_client()
+
     # First, find an issue to get
-    results = search_issues_tool(jql="project = ITHELP", max_results=1)
+    results = client.search_issues(jql="project = ITHELP", max_results=1)
 
     if not results["issues"]:
         print("No issues found in IT project, skipping test")
@@ -23,7 +40,7 @@ def test_get_issue():
     issue_key = results["issues"][0]["key"]
     print(f"Getting issue: {issue_key}")
 
-    issue = get_issue_tool(issue_key)
+    issue = client.get_issue(issue_key)
 
     # Verify required fields
     assert issue["key"] == issue_key
@@ -50,8 +67,9 @@ def test_get_issue():
 
 def test_get_nonexistent_issue():
     """Test getting a non-existent issue returns error."""
+    client = _get_client()
     try:
-        get_issue_tool("NONEXISTENT-99999")
+        client.get_issue("NONEXISTENT-99999")
         assert False, "Should have raised ValueError"
     except ValueError as e:
         assert "not found" in str(e).lower()

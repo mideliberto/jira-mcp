@@ -7,13 +7,31 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from jira_mcp.tools import create_issue_tool, update_issue_tool, get_issue_tool
+from jira_mcp.auth.credential_manager import get_credential_manager
+from jira_mcp.jira_client import JiraClient
+
+
+def _get_client() -> JiraClient:
+    """Get an authenticated JiraClient instance."""
+    manager = get_credential_manager()
+    credentials = manager.get_credentials()
+    if not credentials:
+        raise RuntimeError(
+            "No Jira credentials found. Run: python scripts/setup_credentials.py"
+        )
+    return JiraClient(
+        base_url=credentials["base_url"],
+        email=credentials["email"],
+        api_token=credentials["api_token"],
+    )
 
 
 def test_update_summary():
     """Test updating issue summary."""
+    client = _get_client()
+
     # Create test issue
-    result = create_issue_tool(
+    result = client.create_issue(
         project="ITPROJ",
         issue_type="Task",
         summary="TEST - Update test - DELETE ME",
@@ -22,7 +40,7 @@ def test_update_summary():
     print(f"Created: {key}")
 
     # Update summary
-    update_result = update_issue_tool(
+    update_result = client.update_issue(
         issue_key=key,
         fields={"summary": "TEST - Update test - UPDATED - DELETE ME"}
     )
@@ -32,7 +50,7 @@ def test_update_summary():
     print(f"Updated at: {update_result['updated']}")
 
     # Verify
-    issue = get_issue_tool(key)
+    issue = client.get_issue(key)
     assert "UPDATED" in issue["summary"]
     print(f"Verified: {issue['summary']}")
 
@@ -41,8 +59,10 @@ def test_update_summary():
 
 def test_update_description():
     """Test updating issue description."""
+    client = _get_client()
+
     # Create test issue
-    result = create_issue_tool(
+    result = client.create_issue(
         project="ITPROJ",
         issue_type="Task",
         summary="TEST - Description update test - DELETE ME",
@@ -50,13 +70,13 @@ def test_update_description():
     key = result["key"]
 
     # Update description
-    update_issue_tool(
+    client.update_issue(
         issue_key=key,
         fields={"description": "Updated description via API test"}
     )
 
     # Verify
-    issue = get_issue_tool(key)
+    issue = client.get_issue(key)
     assert "Updated description" in issue["description"]
     print(f"Description updated for: {key}")
 

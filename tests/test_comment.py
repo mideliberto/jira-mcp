@@ -7,13 +7,31 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from jira_mcp.tools import create_issue_tool, add_comment_tool
+from jira_mcp.auth.credential_manager import get_credential_manager
+from jira_mcp.jira_client import JiraClient
+
+
+def _get_client() -> JiraClient:
+    """Get an authenticated JiraClient instance."""
+    manager = get_credential_manager()
+    credentials = manager.get_credentials()
+    if not credentials:
+        raise RuntimeError(
+            "No Jira credentials found. Run: python scripts/setup_credentials.py"
+        )
+    return JiraClient(
+        base_url=credentials["base_url"],
+        email=credentials["email"],
+        api_token=credentials["api_token"],
+    )
 
 
 def test_add_comment():
     """Test adding a comment to an issue."""
+    client = _get_client()
+
     # Create test issue
-    result = create_issue_tool(
+    result = client.create_issue(
         project="ITPROJ",
         issue_type="Task",
         summary="TEST - Comment test - DELETE ME",
@@ -22,7 +40,7 @@ def test_add_comment():
     print(f"Created: {key}")
 
     # Add comment
-    comment_result = add_comment_tool(
+    comment_result = client.add_comment(
         issue_key=key,
         body="Test comment from jira-mcp automated test"
     )
@@ -37,8 +55,10 @@ def test_add_comment():
 
 def test_multiline_comment():
     """Test adding a multiline comment."""
+    client = _get_client()
+
     # Create test issue
-    result = create_issue_tool(
+    result = client.create_issue(
         project="ITPROJ",
         issue_type="Task",
         summary="TEST - Multiline comment test - DELETE ME",
@@ -46,7 +66,7 @@ def test_multiline_comment():
     key = result["key"]
 
     # Add multiline comment
-    comment_result = add_comment_tool(
+    comment_result = client.add_comment(
         issue_key=key,
         body="Line 1\nLine 2\nLine 3"
     )
