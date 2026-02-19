@@ -1,5 +1,23 @@
 # DEVLOG
 
+## 2026-02-19
+
+### Multi-Instance Support
+**Origin:** Chat decision
+**Task:** Enable single jira-mcp codebase to serve multiple Jira Cloud instances
+**Changes:**
+- Added JIRA_CONFIG_PATH env var to credential_manager.py (lines 47-52)
+- Falls back to default config/credentials.json if not set (PWP unchanged)
+- Created config/credentials-cma.json for CMA Jira instance
+- Updated .gitignore to exclude all credentials*.json files
+- Wired CMA vault .mcp.json with jira-cma server pointing to CMA config
+**Commits:** 49b56fd
+**Status:** Complete
+**Notes:**
+- CMA Jira: https://chicagomeat.atlassian.net (projects: IT, ITPROJECT)
+- PWP Jira: https://pwphealth.atlassian.net (unchanged, no env var needed)
+- Field mappings for CMA projects not yet configured (use /rest/api/3/field to discover)
+
 ## 2026-02-04
 
 ### Phase 1: Foundation - Auth and Connection
