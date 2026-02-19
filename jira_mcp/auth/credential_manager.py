@@ -44,7 +44,13 @@ class CredentialManager:
         # Project root is parent of jira_mcp package
         self.project_root = Path(__file__).parent.parent.parent
         self.salt_path = self.project_root / "encryption_salt"
-        self.credentials_path = self.project_root / "config" / "credentials.json"
+
+        # Allow override via JIRA_CONFIG_PATH for multi-instance support
+        config_path = os.environ.get("JIRA_CONFIG_PATH")
+        if config_path:
+            self.credentials_path = Path(config_path)
+        else:
+            self.credentials_path = self.project_root / "config" / "credentials.json"
 
         self.encryption_key = self._get_encryption_key()
         self.fernet = Fernet(self.encryption_key)
