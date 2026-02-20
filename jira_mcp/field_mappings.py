@@ -1,5 +1,5 @@
 """
-Custom field mappings for PWP Jira projects.
+Custom field mappings for Jira projects (PWP + CMA instances).
 
 Maps cryptic customfield_XXXXX IDs to friendly names.
 """
@@ -22,6 +22,54 @@ PROJECT_FIELDS = {
     },
     'ITPROJ': {},
     'ITPMO': {},
+    # =========================================================================
+    # CMA instance — chicagomeat.atlassian.net
+    # =========================================================================
+
+    # IT — Service desk project (JSM)
+    # Issue types: Task, Sub-task, Service request, Incident,
+    #              Service request with approvals
+    # Workflows:
+    #   Task: Open → Work in progress → Pending → Done (also Reopened)
+    #   Service request: Open → In Progress → Waiting for support →
+    #     Waiting for customer → Escalated → Pending → Resolved → Closed → Canceled
+    #   Incident: Open → Work in progress → Pending → Completed → Closed → Canceled
+    'IT': {
+        'customfield_10004': 'impact',                # Service desk impact level
+        'customfield_10041': 'urgency',               # Service desk urgency
+        'customfield_10048': 'severity',              # Incident severity
+        'customfield_10087': 'category',              # Ticket categorization
+        'customfield_10042': 'affected_services',     # Impacted services
+        'customfield_10049': 'affected_hardware',     # Impacted hardware
+        'customfield_10044': 'pending_reason',        # Why ticket is pending
+        'customfield_10010': 'request_type',          # JSM request type
+        'customfield_10002': 'organizations',         # Customer organizations
+        'customfield_10034': 'request_participants',  # Additional participants
+        'customfield_10045': 'major_incident',        # Major incident flag
+        'customfield_10047': 'responders',            # Incident responders
+        'customfield_10003': 'approvers',             # Approval chain
+        'customfield_10035': 'satisfaction',           # CSAT rating
+        'customfield_10021': 'flagged',               # Impediment flag
+        'customfield_10001': 'team',                  # Team assignment
+    },
+
+    # ITPROJECT — Team-managed kanban project
+    # Issue types: Task, Sub-task, Epic
+    # Workflow: To Do → In Progress → Done
+    #
+    # IMPORTANT: ITPROJECT is team-managed. Epic hierarchy uses the `parent`
+    # field, NOT customfield_10014 (epic_link). epic_link is not on the
+    # ITPROJECT Task screen.
+    # Use: create_issue(parent_key="ITPROJECT-XX") to link Tasks under an Epic.
+    'ITPROJECT': {
+        'customfield_10011': 'epic_name',     # Epic display name
+        'customfield_10014': 'epic_link',     # NOT USED for team-managed — see note above
+        'customfield_10015': 'start_date',    # Project start
+        'customfield_10016': 'story_points',  # Estimation
+        'customfield_10020': 'sprint',        # Sprint assignment
+        'customfield_10021': 'flagged',       # Impediment flag
+        'customfield_10001': 'team',          # Team assignment
+    },
 }
 
 
